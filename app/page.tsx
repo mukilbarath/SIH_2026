@@ -129,15 +129,19 @@ export default function Home() {
         </header>
 
         {activeTab === 'Dashboard' && (
-          <div className={styles.dashboardGrid}>
-            <div className={styles.colSpan8} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <Engine3DView currentData={currentData} height="350px" />
-              <TelemetryDashboard dataHistory={dataHistory} currentData={currentData} />
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* 3D Engine takes full width at the top, height reduced to keep controls visible */}
+            <Engine3DView currentData={currentData} height="360px" />
 
-            <div className={styles.colSpan4} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <EngineControls currentThrottle={currentThrottle} setThrottle={handleThrottleChange} />
-              <DiagnosticsPanel currentData={currentData} />
+            <div className={styles.dashboardGrid}>
+              <div className={styles.colSpan4} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <EngineControls currentThrottle={currentThrottle} setThrottle={handleThrottleChange} />
+                <DiagnosticsPanel currentData={currentData} />
+              </div>
+
+              <div className={styles.colSpan8} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <TelemetryDashboard dataHistory={dataHistory} currentData={currentData} />
+              </div>
             </div>
           </div>
         )}

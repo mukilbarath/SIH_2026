@@ -82,11 +82,16 @@ def update_physics(dt):
         state['cht'][i] += (target_cht - state['cht'][i] + (math.sin(time.time() * 2 + i) * 2.0)) * (dt / 10.0)
         state['egt'][i] += (target_egt - state['egt'][i] + (math.cos(time.time() * 5 + i) * 5.0)) * (dt / 2.0)
         
-    # Degradation
-    if state['rpm'] > 4500:
-        state['rul_hours'] -= (dt / 3600.0) * 10.0  # Degrade 10x faster at high RPM
-    elif state['is_running']:
-        state['rul_hours'] -= (dt / 3600.0)
+    # Degradation — only when engine is actually running
+    if state['is_running']:
+        if state['rpm'] > 4500:
+            state['rul_hours'] -= (dt / 3600.0) * 10.0  # Degrade 10x faster at high RPM
+        else:
+            state['rul_hours'] -= (dt / 3600.0)
+        
+    # Clamp at zero
+    if state['rul_hours'] < 0:
+        state['rul_hours'] = 0.0
         
     if state['rul_hours'] < 50:
         state['fault_label'] = 'WEAR_WARNING'
@@ -144,14 +149,25 @@ async def engine_loop():
                     csv_index = 0
                 row = data[csv_index]
                 
-                state['throttle_pct'] = row.get('throttle_pct', 0)
-                state['rpm'] = row.get('rpm', 0)
+                fault_severity = row.get('fault_severity', 0)
+                rpm = row.get('rpm', 0)
+                
+                # Predictive Dynamic RUL Calculation
+                degradation = dt / 3600.0
+                if rpm > 3000:
+                    degradation *= (rpm / 3000.0) ** 2
+                if fault_severity > 0:
+                    degradation *= (1.0 + fault_severity * 500.0) # Accelerated degradation during active faults
+                    
+                state['rul_hours'] -= degradation
+                if state['rul_hours'] < 0:
+                    state['rul_hours'] = 0.0
                 
                 telemetry_payload = {
                     'type': 'telemetry',
                     'time_s': current_time,
                     'throttle_pct': row.get('throttle_pct', 0),
-                    'rpm': row.get('rpm', 0),
+                    'rpm': rpm,
                     'fuel_flow_lph': row.get('fuel_flow_lph', 0),
                     'cht_1_c': row.get('cht_1_c', 0),
                     'cht_2_c': row.get('cht_2_c', 0),
@@ -162,8 +178,8 @@ async def engine_loop():
                     'egt_3_c': row.get('egt_3_c', 0),
                     'egt_4_c': row.get('egt_4_c', 0),
                     'fault_label': row.get('fault_label', 'HEALTHY'),
-                    'fault_severity': row.get('fault_severity', 0),
-                    'rul_hours': row.get('rul_hours', 500),
+                    'fault_severity': fault_severity,
+                    'rul_hours': state['rul_hours'],
                     'mode': state['mode'],
                     # Dataset extras
                     'vibration_x_g': row.get('vibration_x_g', 0),
@@ -198,6 +214,10 @@ async def handler(websocket):
                 state['mode'] = mode
                 global csv_index
                 csv_index = 0 # reset replay
+                state['rul_hours'] = 500.0 # reset RUL on mode switch
+                state['fault_label'] = 'HEALTHY'
+                state['fault_severity'] = 0.0
+                print(f"RUL reset to 500.0 hrs for mode: {mode}")
     except websockets.exceptions.ConnectionClosed:
         pass
     finally:

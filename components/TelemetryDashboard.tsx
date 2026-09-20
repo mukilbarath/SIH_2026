@@ -41,56 +41,62 @@ export default function TelemetryDashboard({ dataHistory, currentData }: { dataH
       </div>
 
       {/* Main Charts */}
-      <div className="panel" style={{ height: '300px' }}>
+      <div className="panel">
         <div className="panel-header">
           <div className="panel-title">Engine Speed (RPM)</div>
         </div>
-        <ResponsiveContainer width="100%" height="80%">
-          <LineChart data={dataHistory}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-            <XAxis dataKey="time_s" stroke="var(--text-secondary)" />
-            <YAxis stroke="var(--text-secondary)" />
-            <Tooltip contentStyle={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }} />
-            <Line type="monotone" dataKey="rpm" stroke="var(--accent-blue)" dot={false} strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        <div className="panel" style={{ height: '250px' }}>
-          <div className="panel-header">
-            <div className="panel-title">Cylinder Head Temperatures (°C)</div>
-          </div>
-          <ResponsiveContainer width="100%" height="80%">
+        <div style={{ width: '100%', height: '240px', marginTop: '0.5rem' }}>
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dataHistory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-              <XAxis dataKey="time_s" hide />
-              <YAxis stroke="var(--text-secondary)" />
-              <Tooltip contentStyle={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }} />
-              <Line type="monotone" dataKey="cht_1_c" stroke="#3b82f6" dot={false} />
-              <Line type="monotone" dataKey="cht_2_c" stroke="#10b981" dot={false} />
-              <Line type="monotone" dataKey="cht_3_c" stroke="#f59e0b" dot={false} />
-              <Line type="monotone" dataKey="cht_4_c" stroke="#ef4444" dot={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis dataKey="time_s" stroke="var(--text-secondary)" tickFormatter={(t) => typeof t === 'number' && t > 1000000000 ? new Date(t * 1000).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }) : (typeof t === 'number' ? `${t.toFixed(1)}s` : t)} />
+              <YAxis stroke="var(--text-secondary)" domain={['auto', 'auto']} />
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '6px' }} />
+              <Line type="monotone" dataKey="rpm" stroke="var(--accent-blue)" dot={false} strokeWidth={2} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
+      </div>
 
-        <div className="panel" style={{ height: '250px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="panel">
+          <div className="panel-header">
+            <div className="panel-title">Cylinder Head Temperatures (°C)</div>
+          </div>
+          <div style={{ width: '100%', height: '200px', marginTop: '0.5rem' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dataHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                <XAxis dataKey="time_s" hide />
+                <YAxis stroke="var(--text-secondary)" domain={['auto', 'auto']} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '6px' }} />
+                <Line type="monotone" dataKey="cht_1_c" stroke="#3b82f6" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="cht_2_c" stroke="#10b981" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="cht_3_c" stroke="#f59e0b" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="cht_4_c" stroke="#ef4444" dot={false} isAnimationActive={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="panel">
           <div className="panel-header">
             <div className="panel-title">Exhaust Gas Temperatures (°C)</div>
           </div>
-          <ResponsiveContainer width="100%" height="80%">
-            <LineChart data={dataHistory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-              <XAxis dataKey="time_s" hide />
-              <YAxis stroke="var(--text-secondary)" />
-              <Tooltip contentStyle={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }} />
-              <Line type="monotone" dataKey="egt_1_c" stroke="#3b82f6" dot={false} />
-              <Line type="monotone" dataKey="egt_2_c" stroke="#10b981" dot={false} />
-              <Line type="monotone" dataKey="egt_3_c" stroke="#f59e0b" dot={false} />
-              <Line type="monotone" dataKey="egt_4_c" stroke="#ef4444" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div style={{ width: '100%', height: '200px', marginTop: '0.5rem' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dataHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                <XAxis dataKey="time_s" hide />
+                <YAxis stroke="var(--text-secondary)" domain={['auto', 'auto']} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '6px' }} />
+                <Line type="monotone" dataKey="egt_1_c" stroke="#3b82f6" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="egt_2_c" stroke="#10b981" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="egt_3_c" stroke="#f59e0b" dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="egt_4_c" stroke="#ef4444" dot={false} isAnimationActive={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     </div>
