@@ -1,7 +1,7 @@
 'use client';
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows, Text } from '@react-three/drei';
+import { OrbitControls, ContactShadows, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 const CRANK_RADIUS = 0.8;
@@ -603,10 +603,12 @@ export default function Engine3DView({ currentData, height = '700px' }: { curren
       <Canvas camera={{ position: [0, 12, 22], fov: 45 }}>
         <color attach="background" args={['#040406']} />
 
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[12, 18, 12]} intensity={2.5} castShadow />
-        <pointLight position={[0, 3, 5]} intensity={1.2} color="#4488cc" />
-        <pointLight position={[0, -5, 0]} intensity={0.5} color="#cc6644" />
+        <ambientLight intensity={0.8} />
+        <hemisphereLight intensity={0.9} groundColor="#111118" color="#d8e8ff" />
+        <directionalLight position={[12, 18, 12]} intensity={2.8} castShadow />
+        <directionalLight position={[-12, 12, -10]} intensity={1.6} color="#7799cc" />
+        <pointLight position={[0, 4, 6]} intensity={1.5} color="#5599ee" />
+        <pointLight position={[0, -5, 0]} intensity={0.8} color="#cc6644" />
 
         <group position={[0, -0.5, 0]}>
           
@@ -649,8 +651,7 @@ export default function Engine3DView({ currentData, height = '700px' }: { curren
         </group>
 
         <ContactShadows resolution={2048} scale={40} blur={2.0} opacity={0.7} far={20} color="#000" position={[0, -4.0, 0]} />
-        <Environment preset="city" />
-        <OrbitControls enablePan enableZoom enableRotate minDistance={8} maxDistance={40} target={[0, 0, 0]} />
+        <OrbitControls enablePan enableZoom enableRotate autoRotate autoRotateSpeed={1.8} minDistance={8} maxDistance={40} target={[0, 0, 0]} />
       </Canvas>
     </div>
   );
