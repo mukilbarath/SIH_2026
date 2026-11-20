@@ -39,7 +39,6 @@ test('real simulator controls, replay, exports, navigation and mobile layout', a
   await page.screenshot({path:'docs/assets/mobile.png',fullPage:true});
   await page.setViewportSize({width:1440,height:1000});
   await page.getByRole('button', {name:'Dashboard',exact:true}).click();
-  await page.getByRole('button', {name:'Show 3D Engine'}).click();
   await expect(page.locator('canvas')).toBeVisible();
   await page.screenshot({ path: 'docs/assets/dashboard.png', fullPage: true });
   expect(errors).toEqual([]);
