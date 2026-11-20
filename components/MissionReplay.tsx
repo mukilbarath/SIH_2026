@@ -12,7 +12,7 @@ export default function MissionReplay({ currentScenario, setScenario }: { curren
       </div>
       
       <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-        Select a dataset scenario to inject into the CAN bus telemetry stream. This allows testing of the Digital Twin behavior under different mission profiles.
+        Select a dataset scenario to replay in the simulated telemetry stream. This allows testing of the Digital Twin behavior under different mission profiles.
       </p>
 
       <div className="flex-col" style={{ gap: '1rem' }}>

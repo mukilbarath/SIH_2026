@@ -1,21 +1,17 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { Activity, Thermometer, Droplets, Wind, Zap } from 'lucide-react';
+import type { Telemetry } from '@/lib/telemetry';
+import React from 'react';
+import { Activity, Thermometer, Droplets } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function TelemetryDashboard({ dataHistory, currentData }: { dataHistory: any[], currentData: any }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+function TelemetryDashboard({ dataHistory, currentData }: { dataHistory: Telemetry[], currentData: Telemetry | null }) {
 
-  if (!mounted) return <div className="panel flex-center">Loading charts...</div>;
   if (!currentData) return <div className="panel flex-center">Waiting for telemetry...</div>;
 
   return (
     <div className="grid-container">
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1.5rem' }}>
         <div className="panel">
           <div className="panel-title"><Activity size={18} className="status-healthy" /> RPM</div>
           <div className="data-value mt-2">{currentData.rpm?.toFixed(0) || 0} <span className="data-unit">rpm</span></div>
@@ -52,13 +48,13 @@ export default function TelemetryDashboard({ dataHistory, currentData }: { dataH
               <XAxis dataKey="time_s" stroke="var(--text-secondary)" tickFormatter={(t) => typeof t === 'number' && t > 1000000000 ? new Date(t * 1000).toLocaleTimeString([], { hour12: false, minute: '2-digit', second: '2-digit' }) : (typeof t === 'number' ? `${t.toFixed(1)}s` : t)} />
               <YAxis stroke="var(--text-secondary)" domain={['auto', 'auto']} />
               <Tooltip contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '6px' }} />
-              <Line type="monotone" dataKey="rpm" stroke="var(--accent-blue)" dot={false} strokeWidth={2} isAnimationActive={false} />
+              <Line type="linear" dataKey="rpm" stroke="var(--accent-blue)" dot={false} strokeWidth={2} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <div className="panel">
           <div className="panel-header">
             <div className="panel-title">Cylinder Head Temperatures (°C)</div>
@@ -70,10 +66,10 @@ export default function TelemetryDashboard({ dataHistory, currentData }: { dataH
                 <XAxis dataKey="time_s" hide />
                 <YAxis stroke="var(--text-secondary)" domain={['auto', 'auto']} />
                 <Tooltip contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '6px' }} />
-                <Line type="monotone" dataKey="cht_1_c" stroke="#3b82f6" dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="cht_2_c" stroke="#10b981" dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="cht_3_c" stroke="#f59e0b" dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="cht_4_c" stroke="#ef4444" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="cht_1_c" stroke="#3b82f6" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="cht_2_c" stroke="#10b981" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="cht_3_c" stroke="#f59e0b" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="cht_4_c" stroke="#ef4444" dot={false} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -90,10 +86,10 @@ export default function TelemetryDashboard({ dataHistory, currentData }: { dataH
                 <XAxis dataKey="time_s" hide />
                 <YAxis stroke="var(--text-secondary)" domain={['auto', 'auto']} />
                 <Tooltip contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '6px' }} />
-                <Line type="monotone" dataKey="egt_1_c" stroke="#3b82f6" dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="egt_2_c" stroke="#10b981" dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="egt_3_c" stroke="#f59e0b" dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="egt_4_c" stroke="#ef4444" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="egt_1_c" stroke="#3b82f6" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="egt_2_c" stroke="#10b981" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="egt_3_c" stroke="#f59e0b" dot={false} isAnimationActive={false} />
+                <Line type="linear" dataKey="egt_4_c" stroke="#ef4444" dot={false} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -102,3 +98,5 @@ export default function TelemetryDashboard({ dataHistory, currentData }: { dataH
     </div>
   );
 }
+
+export default React.memo(TelemetryDashboard);

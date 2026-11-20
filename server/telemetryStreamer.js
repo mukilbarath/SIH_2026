@@ -1,94 +1,45 @@
-const { Server } = require('socket.io');
-const fs = require('fs');
-const path = require('path');
-const Papa = require('papaparse');
-
-const PORT = 3001;
-const DATA_FILE = path.join(__dirname, '..', 'train_healthy.csv');
-const FAULT_FILE = path.join(__dirname, '..', 'train_faults.csv');
-const SCENARIO_FILE = path.join(__dirname, '..', 'test_scenarios.csv');
-
-const io = new Server(PORT, {
-  cors: {
-    origin: "*", // allow all for prototype
-    methods: ["GET", "POST"]
+// Optional legacy Socket.IO replay. The dashboard uses the Python server instead.
+async function main() {
+  const { Server } = await import('socket.io');
+  const { createServer } = await import('node:http');
+  const { readFile } = await import('node:fs/promises');
+  const { fileURLToPath } = await import('node:url');
+  const { default: Papa } = await import('papaparse');
+  const origins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  const datasets = {};
+  for (const [mode, filename] of Object.entries({healthy: 'train_healthy.csv', faults: 'train_faults.csv', scenarios: 'test_scenarios.csv'})) {
+    const parsed = Papa.parse(await readFile(fileURLToPath(new URL('../' + filename, import.meta.url)), 'utf8'), {
+      header: true, dynamicTyping: true, skipEmptyLines: true,
+    });
+    if (parsed.errors.length || !parsed.data.length || parsed.data.some(row => !Number.isFinite(row.rpm) || row.provenance?.trim() !== 'SIMULATED')) {
+      throw new Error('Invalid dataset: ' + filename);
+    }
+    datasets[mode] = parsed.data;
   }
-});
-
-let currentDataSource = DATA_FILE;
-let streamingInterval = null;
-let currentData = [];
-let currentIndex = 0;
-const HZ = 10; // 10 Hz
-
-function loadData(file) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, 'utf8', (err, data) => {
-      if (err) return reject(err);
-      Papa.parse(data, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          resolve(results.data);
-        },
-        error: (err) => reject(err)
-      });
+  const http = createServer();
+  const io = new Server(http, {
+    cors: { origin: origins }, maxHttpBufferSize: 1024,
+    allowRequest: (request, callback) => callback(null, origins.includes(request.headers.origin)),
+  });
+  let mode = 'healthy';
+  let index = 0;
+  const interval = setInterval(() => {
+    io.emit('telemetry', datasets[mode][index]);
+    index = (index + 1) % datasets[mode].length;
+  }, 100);
+  io.on('connection', socket => {
+    let lastChange = 0;
+    socket.on('set_scenario', value => {
+      if (typeof value !== 'string' || !Object.hasOwn(datasets, value)) {
+        socket.emit('control_error', 'Unknown scenario'); return;
+      }
+      if (Date.now() - lastChange < 250) return;
+      lastChange = Date.now(); mode = value; index = 0;
+      io.emit('scenario_changed', mode);
     });
   });
+  http.listen(3001, '127.0.0.1', () => console.log('Legacy local Socket.IO replay on port 3001'));
+  const stop = () => { clearInterval(interval); io.close(); };
+  process.once('SIGINT', stop); process.once('SIGTERM', stop);
 }
-
-async function startStream() {
-  if (streamingInterval) clearInterval(streamingInterval);
-  try {
-    console.log(`Loading data from ${currentDataSource}...`);
-    currentData = await loadData(currentDataSource);
-    currentIndex = 0;
-    
-    streamingInterval = setInterval(() => {
-      if (currentIndex >= currentData.length) {
-        currentIndex = 0; // loop back
-      }
-      
-      const row = currentData[currentIndex];
-      // Broadcast simulated CAN/MAVLink payload
-      io.emit('telemetry', row);
-      
-      currentIndex++;
-    }, 1000 / HZ);
-    console.log(`Streaming started at ${HZ}Hz.`);
-  } catch (error) {
-    console.error('Error starting stream:', error);
-  }
-}
-
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-  
-  // Client can request to change the scenario
-  socket.on('set_scenario', async (scenarioType) => {
-    console.log(`Client requested scenario: ${scenarioType}`);
-    switch (scenarioType) {
-      case 'healthy':
-        currentDataSource = DATA_FILE;
-        break;
-      case 'faults':
-        currentDataSource = FAULT_FILE;
-        break;
-      case 'scenarios':
-        currentDataSource = SCENARIO_FILE;
-        break;
-      default:
-        currentDataSource = DATA_FILE;
-    }
-    await startStream();
-    io.emit('scenario_changed', scenarioType);
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
-
-console.log(`Digital Twin Simulation Server running on ws://localhost:${PORT}`);
-startStream();
+main().catch(error => { console.error(error); process.exitCode = 1; });

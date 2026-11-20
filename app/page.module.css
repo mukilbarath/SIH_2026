@@ -101,3 +101,15 @@
   .sidebar { display: none; }
   .colSpan6 { grid-column: span 12; }
 }
+
+.navItem { background: transparent; border: 0; font: inherit; text-align: left; }
+.mainContent { min-width: 0; }
+@media (max-width: 768px) {
+  .sidebar { display: flex; padding: 1rem; gap: 0.5rem; }
+  .logo { padding-bottom: 0.5rem; }
+  .nav { flex-direction: row; flex-wrap: wrap; }
+  .navItem { padding: 0.5rem; font-size: 0.85rem; }
+  .mainContent { padding: 1rem; max-height: none; }
+  .header { align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  .colSpan3, .colSpan4, .colSpan6, .colSpan8 { grid-column: span 12; }
+}

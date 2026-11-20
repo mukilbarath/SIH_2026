@@ -62,7 +62,13 @@ Run before opening a pull request:
 ```bash
 npm run lint
 npm run build
-python -m py_compile server/mavlink_sitl.py
+npm run typecheck
+npm test
+python -m unittest discover -s tests -p 'test_*.py' -v
+python scripts/validate_datasets.py --check
+npm audit --omit=dev --audit-level=high
+npx playwright install chromium
+npm run test:e2e
 ```
 
 For UI changes, include screenshots or a short recording in the pull request.
@@ -88,3 +94,5 @@ Do not commit credentials, `.env` files, generated build output, or unrelated la
 - [ ] Telemetry/schema changes are documented.
 - [ ] No secrets or generated files are included.
 - [ ] At least one team member reviewed the change.
+
+Use Node 24 and the project Python virtual environment. Browser checks start their own servers; stop manual servers first. Set PYTHON to the environment executable if it is not activated. Consult docs/VALIDATION.md for evidence and known gaps. Do not imply source labels are inferred faults or the illustrative counter is calibrated RUL.

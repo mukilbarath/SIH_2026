@@ -1,4 +1,5 @@
 'use client';
+import { isHealthy as sampleIsHealthy, type Telemetry } from '@/lib/telemetry';
 import React from 'react';
 import { AlertTriangle, CheckCircle, ActivitySquare, Clock, Info, Wrench } from 'lucide-react';
 
@@ -57,10 +58,10 @@ const FAULT_DICTIONARY: Record<string, { reason: string, measures: string }> = {
   }
 };
 
-export default function DiagnosticsPanel({ currentData }: { currentData: any }) {
+function DiagnosticsPanelComponent({ currentData }: { currentData: Telemetry | null }) {
   if (!currentData) return <div className="panel">Waiting for data...</div>;
 
-  const isHealthy = currentData.fault_label === 'HEALTHY' || !currentData.fault_label;
+  const isHealthy = sampleIsHealthy(currentData);
   const faultDetails = FAULT_DICTIONARY[currentData.fault_label];
   
   return (
@@ -71,7 +72,7 @@ export default function DiagnosticsPanel({ currentData }: { currentData: any }) 
             <ActivitySquare size={18} /> Health Status
           </div>
           <div className={`data-value ${isHealthy ? 'status-healthy' : 'status-critical animate-pulse'}`} style={{ fontSize: '1.2rem' }}>
-            {isHealthy ? 'NOMINAL' : 'FAULT DETECTED'}
+            {isHealthy ? 'NOMINAL' : 'SOURCE FAULT'}
           </div>
         </div>
         
@@ -91,20 +92,20 @@ export default function DiagnosticsPanel({ currentData }: { currentData: any }) 
                 <span>Sev: {(currentData.fault_severity * 100).toFixed(0)}%</span>
               </div>
               <p style={{ fontSize: '0.85rem', color: '#fca5a5', margin: 0 }}>
-                Anomaly detected in operating parameters. Immediate analysis recommended.
+                Simulated source label; the descriptions below are educational examples, not maintenance instructions.
               </p>
               
               {faultDetails && (
                 <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(239, 68, 68, 0.3)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ fontSize: '0.85rem', color: '#fca5a5' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, marginBottom: '0.2rem' }}>
-                      <Info size={14} /> Reason:
+                      <Info size={14} /> Example explanation:
                     </div>
                     {faultDetails.reason}
                   </div>
                   <div style={{ fontSize: '0.85rem', color: '#fca5a5' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, marginBottom: '0.2rem' }}>
-                      <Wrench size={14} /> Measures:
+                      <Wrench size={14} /> Example checks (unvalidated):
                     </div>
                     {faultDetails.measures}
                   </div>
@@ -118,7 +119,7 @@ export default function DiagnosticsPanel({ currentData }: { currentData: any }) 
               <div className="flex-between" style={{ color: 'var(--accent-green)', fontWeight: 600 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <CheckCircle size={16} /> 
-                  <span>All Systems Normal</span>
+                  <span>No source fault flagged</span>
                 </div>
               </div>
             </div>
@@ -129,13 +130,13 @@ export default function DiagnosticsPanel({ currentData }: { currentData: any }) 
       <div className="panel">
         <div className="panel-header">
           <div className="panel-title">
-            <Clock size={18} /> Predictive Analytics
+            <Clock size={18} /> Illustrative Degradation
           </div>
         </div>
         <div className="flex-col" style={{ gap: '1.5rem', marginTop: '1rem' }}>
           <div>
             <div className="flex-between mb-1" style={{ marginBottom: '0.5rem' }}>
-              <span className="data-label">Estimated RUL (Remaining Useful Life)</span>
+              <span className="data-label">Illustrative RUL counter</span>
               <span className="data-value" style={{ fontSize: '1.2rem', color: typeof currentData.rul_hours === 'number' && currentData.rul_hours < 50 ? 'var(--accent-red)' : 'var(--text-primary)' }}>
                 {typeof currentData.rul_hours === 'number' ? currentData.rul_hours.toFixed(1) : '--'} <span className="data-unit">hrs</span>
               </span>
@@ -153,9 +154,9 @@ export default function DiagnosticsPanel({ currentData }: { currentData: any }) 
           </div>
           
           <div className="flex-between">
-            <span className="data-label">Maintenance Rec</span>
+            <span className="data-label">Demo threshold</span>
             <span style={{ fontSize: '0.9rem', color: currentData.rul_hours < 50 ? 'var(--accent-red)' : 'var(--text-secondary)' }}>
-              {currentData.rul_hours < 50 ? 'Schedule Overhaul' : 'Standard Check'}
+              {currentData.rul_hours < 50 ? 'Below 50 hours' : '50 hours or above'}
             </span>
           </div>
         </div>
@@ -163,3 +164,5 @@ export default function DiagnosticsPanel({ currentData }: { currentData: any }) 
     </div>
   );
 }
+
+export default React.memo(DiagnosticsPanelComponent);

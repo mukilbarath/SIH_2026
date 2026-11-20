@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
-import { Settings, Cpu, Gauge, Activity, AlertCircle, BarChart3, Database, Box } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Settings, Cpu, Gauge, Activity, AlertCircle, BarChart3, Database } from 'lucide-react';
 import styles from './page.module.css';
 
 import TelemetryDashboard from '@/components/TelemetryDashboard';
@@ -11,69 +11,29 @@ import AnalyticsView from '@/components/AnalyticsView';
 import FaultDetectionView from '@/components/FaultDetectionView';
 import DatasetManager from '@/components/DatasetManager';
 import TrendLogs from '@/components/TrendLogs';
-import Engine3DView from '@/components/Engine3DView';
+import dynamic from 'next/dynamic';
+import { useTelemetry } from '@/hooks/useTelemetry';
+import { download, type Mode } from '@/lib/telemetry';
+import ViewBoundary from '@/components/ViewBoundary';
+const Engine3DView = dynamic(() => import('@/components/Engine3DView'), { ssr: false, loading: () => <div className="panel">Loading 3D view…</div> });
 import SystemConfigView from '@/components/SystemConfigView';
 
-const MAX_HISTORY = 50;
-
 export default function Home() {
-  const wsRef = useRef<WebSocket | null>(null);
-  const [currentData, setCurrentData] = useState<any>(null);
-  const [dataHistory, setDataHistory] = useState<any[]>([]);
-  const [connectionStatus, setConnectionStatus] = useState('Connecting...');
-  const [currentThrottle, setCurrentThrottle] = useState(0);
+  const { currentData, dataHistory, status: connectionStatus, error, send, connected } = useTelemetry();
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3002');
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setConnectionStatus('Connected to Telemetry Link');
-    };
-
-    ws.onclose = () => {
-      setConnectionStatus('Disconnected');
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'telemetry') {
-        setCurrentData(data);
-        setCurrentThrottle(data.throttle_pct);
-        setDataHistory(prev => {
-          const newHistory = [...prev, data];
-          if (newHistory.length > MAX_HISTORY) {
-            return newHistory.slice(newHistory.length - MAX_HISTORY);
-          }
-          return newHistory;
-        });
-      }
-    };
-
-    return () => {
-      ws.close();
-    };
+    setMounted(true);
   }, []);
-
-  const handleThrottleChange = (throttle: number) => {
-    setCurrentThrottle(throttle);
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'set_throttle',
-        value: throttle
-      }));
-    }
-  };
-
-  const handleModeChange = (mode: string) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'set_mode',
-        value: mode
-      }));
-    }
-  };
+  const currentThrottle = currentData?.throttle_pct ?? 0;
+  const handleThrottleChange = useCallback((value: number) => send({ type: 'set_throttle', value }), [send]);
+  const handleModeChange = useCallback((value: Mode) => send({ type: 'set_mode', value }), [send]);
+  const exportReport = () => download(JSON.stringify({
+    title: 'SIH 2026 simulated telemetry snapshot', exported_at: new Date().toISOString(),
+    disclaimer: 'Simulated data; not validated aircraft monitoring or maintenance guidance.',
+    sample_count: dataHistory.length, samples: dataHistory,
+  }, null, 2), 'sih-2026-report.json', 'application/json');
 
   const navItems = [
     { id: 'Dashboard', icon: <Gauge size={20} /> },
@@ -84,25 +44,49 @@ export default function Home() {
     { id: 'System Config', icon: <Settings size={20} />, bottom: true }
   ];
 
+  if (!mounted) {
+    return (
+      <div className={styles.layout}>
+        <aside className={styles.sidebar}>
+          <div className={styles.logo}>
+            <Cpu className="status-healthy" />
+            <span>Digital Twin Core</span>
+          </div>
+        </aside>
+        <main className={styles.mainContent}>
+          <header className={styles.header}>
+            <div>
+              <h1 className={styles.headerTitle}>MALE UAV Aero Piston Engine</h1>
+            </div>
+          </header>
+          <div className="panel" style={{ margin: '2rem 0', textAlign: 'center' }}>
+            Loading dashboard…
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.layout}>
       {/* Sidebar Navigation */}
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
-          <Cpu className="status-healthy" /> 
+          <Cpu className="status-healthy" />
           <span>Digital Twin Core</span>
         </div>
-        
+
         <nav className={styles.nav}>
           {navItems.map(item => (
-            <div 
+            <button type="button" aria-pressed={activeTab === item.id}
               key={item.id}
+              suppressHydrationWarning
               className={`${styles.navItem} ${activeTab === item.id ? styles.active : ''}`}
               style={item.bottom ? { marginTop: 'auto' } : {}}
               onClick={() => setActiveTab(item.id)}
             >
               {item.icon} {item.id}
-            </div>
+            </button>
           ))}
         </nav>
       </aside>
@@ -113,29 +97,29 @@ export default function Home() {
           <div>
             <h1 className={styles.headerTitle}>MALE UAV Aero Piston Engine</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-              <div style={{ 
-                width: '8px', 
-                height: '8px', 
-                borderRadius: '50%', 
-                background: connectionStatus.includes('Connected') ? 'var(--accent-green)' : 'var(--accent-red)' 
+              <div style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: connected ? 'var(--accent-green)' : 'var(--accent-red)'
               }} />
-              <span className="data-label">{connectionStatus}</span>
+              <span className="data-label" role="status">{connectionStatus}</span>
             </div>
           </div>
-          
+
           <div className={styles.headerControls}>
-             <button className="btn btn-primary">Export Report</button>
+            <button className="btn btn-primary" suppressHydrationWarning disabled={!dataHistory.length} onClick={exportReport}>Export Report</button>
           </div>
         </header>
 
+        {error && <p role="alert">{error}</p>}
         {activeTab === 'Dashboard' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* 3D Engine takes full width at the top, height reduced to keep controls visible */}
-            <Engine3DView currentData={currentData} height="360px" />
+            <ViewBoundary><Engine3DView currentData={currentData} height="360px" /></ViewBoundary>
 
             <div className={styles.dashboardGrid}>
               <div className={styles.colSpan4} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <EngineControls currentThrottle={currentThrottle} setThrottle={handleThrottleChange} />
+                <EngineControls currentThrottle={currentThrottle} setThrottle={handleThrottleChange} disabled={!connected || currentData?.mode !== 'physics'} />
                 <DiagnosticsPanel currentData={currentData} />
               </div>
 
@@ -159,7 +143,7 @@ export default function Home() {
         )}
 
         {activeTab === 'Datasets' && (
-          <DatasetManager setMode={handleModeChange} currentMode={currentData?.mode || 'physics'} />
+          <DatasetManager disabled={!connected} setMode={handleModeChange} currentMode={currentData?.mode || 'physics'} />
         )}
 
         {activeTab === 'System Config' && (

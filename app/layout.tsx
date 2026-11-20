@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Aero Piston Engine - Digital Twin",
-  description: "Real-time Digital Twin System for MALE UAV Aero Piston Engines",
+  description: "Simulated UAV engine telemetry, CSV replay and schematic 3D visualization. Educational prototype.",
 };
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         {children}
       </body>
     </html>

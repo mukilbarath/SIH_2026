@@ -1,13 +1,14 @@
 'use client';
 import React from 'react';
-import { Database, Play, Square, Activity } from 'lucide-react';
+import type { Mode } from '@/lib/telemetry';
+import { Database, Play, Activity } from 'lucide-react';
 
-export default function DatasetManager({ setMode, currentMode }: { setMode: (mode: string) => void, currentMode: string }) {
+export default function DatasetManager({ setMode, currentMode, disabled }: { setMode: (mode: Mode) => void, currentMode: Mode, disabled: boolean }) {
   
-  const datasets = [
-    { id: 'physics', name: 'Live Physics Engine', description: 'Real-time mathematical MAVLink SITL simulation. Control with throttle.' },
+  const datasets: { id: Mode; name: string; description: string }[] = [
+    { id: 'physics', name: 'Live Physics Engine', description: 'Illustrative mathematical engine simulation. Control with throttle.' },
     { id: 'healthy', name: 'train_healthy.csv', description: 'Playback of normal operating conditions.' },
-    { id: 'faults', name: 'train_faults.csv', description: 'Playback of recorded fault signatures (misfires, leaks).' },
+    { id: 'faults', name: 'train_faults.csv', description: 'Playback of simulated fault labels and telemetry.' },
     { id: 'scenarios', name: 'test_scenarios.csv', description: 'Evaluation dataset with dynamic state changes.' }
   ];
 
@@ -18,12 +19,12 @@ export default function DatasetManager({ setMode, currentMode }: { setMode: (mod
           <div className="panel-title">Data Source Management</div>
         </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-          Select the data stream for the Digital Twin. You can switch seamlessly between the live predictive physics engine and historical CSV playback.
+          Select the data stream for the Digital Twin. You can switch seamlessly between the illustrative engine model and simulated CSV playback.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
           {datasets.map(dataset => (
-            <div 
+            <button type="button" disabled={disabled} aria-pressed={currentMode === dataset.id}
               key={dataset.id} 
               style={{ 
                 padding: '1.5rem', 
@@ -47,7 +48,7 @@ export default function DatasetManager({ setMode, currentMode }: { setMode: (mod
                 )}
               </div>
               <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{dataset.description}</p>
-            </div>
+            </button>
           ))}
         </div>
       </div>

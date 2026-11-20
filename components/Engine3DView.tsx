@@ -1,7 +1,8 @@
 'use client';
+import type { Telemetry } from '@/lib/telemetry';
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Text } from '@react-three/drei';
+import { OrbitControls, ContactShadows, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
 const CRANK_RADIUS = 0.8;
@@ -25,9 +26,10 @@ function valveLift(crankAngle: number, openAngle: number, closeAngle: number): n
 
 // --- Detailed 3D Components ---
 
-const HelixSpring = ({ length, radius, coils }: { length: number, radius: number, coils: number }) => {
+const HelixSpring = React.memo(({ length, radius, coils }: { length: number, radius: number, coils: number }) => {
   const geo = useMemo(() => {
     class HelixCurve extends THREE.Curve<THREE.Vector3> {
+      constructor() { super(); }
       getPoint(t: number, optionalTarget = new THREE.Vector3()) {
         const x = radius * Math.cos(t * Math.PI * 2 * coils);
         const z = radius * Math.sin(t * Math.PI * 2 * coils);
@@ -35,7 +37,7 @@ const HelixSpring = ({ length, radius, coils }: { length: number, radius: number
         return optionalTarget.set(x, y, z);
       }
     }
-    return new THREE.TubeGeometry(new HelixCurve(), 100, 0.04, 12, false);
+    return new THREE.TubeGeometry(new HelixCurve(), 64, 0.04, 8, false);
   }, [length, radius, coils]);
   
   return (
@@ -43,9 +45,9 @@ const HelixSpring = ({ length, radius, coils }: { length: number, radius: number
       <meshStandardMaterial color="#889" metalness={0.8} roughness={0.4} />
     </mesh>
   );
-};
+});
 
-const Gear = ({ radius, teeth, thickness, color }: { radius: number, teeth: number, thickness: number, color: string }) => {
+const Gear = React.memo(({ radius, teeth, thickness, color }: { radius: number, teeth: number, thickness: number, color: string }) => {
   const shape = useMemo(() => {
     const s = new THREE.Shape();
     const inner = radius * 0.85;
@@ -84,9 +86,9 @@ const Gear = ({ radius, teeth, thickness, color }: { radius: number, teeth: numb
       <meshStandardMaterial color={color} metalness={0.9} roughness={0.3} />
     </mesh>
   );
-};
+});
 
-const CamLobe = ({ rotationZ, position }: { rotationZ: number, position: [number, number, number] }) => {
+const CamLobe = React.memo(({ rotationZ, position }: { rotationZ: number, position: [number, number, number] }) => {
   const shape = useMemo(() => {
     const s = new THREE.Shape();
     s.absarc(0, 0, 0.2, Math.PI/2, -Math.PI/2, false);
@@ -105,9 +107,9 @@ const CamLobe = ({ rotationZ, position }: { rotationZ: number, position: [number
       </mesh>
     </group>
   );
-};
+});
 
-const DetailedSparkPlug = ({ position, rotation }: { position: [number, number, number], rotation: [number, number, number] }) => (
+const DetailedSparkPlug = React.memo(({ position, rotation }: { position: [number, number, number], rotation: [number, number, number] }) => (
   <group position={position} rotation={rotation}>
     <mesh position={[0, 0.05, 0]}>
       <cylinderGeometry args={[0.08, 0.08, 0.1, 16]} />
@@ -136,9 +138,9 @@ const DetailedSparkPlug = ({ position, rotation }: { position: [number, number, 
       <meshStandardMaterial color="#888" metalness={0.9} />
     </mesh>
   </group>
-);
+));
 
-const DetailedRockerArm = () => (
+const DetailedRockerArm = React.memo(() => (
   <group>
     <mesh>
       <boxGeometry args={[0.25, 1.2, 0.2]} />
@@ -157,11 +159,11 @@ const DetailedRockerArm = () => (
       <meshStandardMaterial color="#444" metalness={0.9} />
     </mesh>
   </group>
-);
+));
 
 // --- New Auxiliary Components ---
 
-const Turbocharger = () => (
+const Turbocharger = React.memo(() => (
   <group position={[2.5, -1.0, -CYLINDER_SPACING * 2 - 1.0]}>
     <mesh rotation={[Math.PI/2, 0, 0]}>
       <torusGeometry args={[0.5, 0.3, 16, 32]} />
@@ -184,9 +186,9 @@ const Turbocharger = () => (
       <meshStandardMaterial color="#444" metalness={0.8} />
     </mesh>
   </group>
-);
+));
 
-const StarterMotor = () => (
+const StarterMotor = React.memo(() => (
   <group position={[-2.6, -1.0, -4.5]}>
     <mesh rotation={[Math.PI/2, 0, 0]}>
       <cylinderGeometry args={[0.4, 0.4, 1.5, 24]} />
@@ -201,9 +203,9 @@ const StarterMotor = () => (
       <meshStandardMaterial color="#222" metalness={0.8} />
     </mesh>
   </group>
-);
+));
 
-const Alternator = () => (
+const Alternator = React.memo(() => (
   <group position={[2.0, -0.6, 3.5]}>
     <mesh rotation={[Math.PI/2, 0, 0]}>
       <cylinderGeometry args={[0.6, 0.6, 1.5, 24]} />
@@ -214,9 +216,9 @@ const Alternator = () => (
       <meshStandardMaterial color="#222" wireframe />
     </mesh>
   </group>
-);
+));
 
-const IntakeManifold = () => (
+const IntakeManifold = React.memo(() => (
   <group position={[0, 0, 0]}>
     <mesh position={[0, 3.6, 0]} rotation={[Math.PI/2, 0, 0]}>
       <cylinderGeometry args={[0.6, 0.6, 8.5, 24]} />
@@ -243,9 +245,9 @@ const IntakeManifold = () => (
       <meshStandardMaterial color="#aaa" metalness={0.8} />
     </mesh>
   </group>
-);
+));
 
-const IgnitionSystem = () => (
+const IgnitionSystem = React.memo(() => (
   <group position={[0, 3.6, -4.5]}>
     <mesh position={[0.6, 0, 0]}>
       <boxGeometry args={[0.8, 0.8, 1.2]} />
@@ -260,9 +262,9 @@ const IgnitionSystem = () => (
       <meshStandardMaterial color="#ffaa00" roughness={0.6} />
     </mesh>
   </group>
-);
+));
 
-const ECU = () => (
+const ECU = React.memo(() => (
   <group position={[-2.05, -2.5, 1.0]} rotation={[0, 0, Math.PI/2]}>
     <mesh>
       <boxGeometry args={[1.5, 0.2, 2.0]} />
@@ -279,11 +281,11 @@ const ECU = () => (
       <meshStandardMaterial color="#111" />
     </mesh>
   </group>
-);
+));
 
 // --- Cylinder Assembly ---
 
-const VCylinder = ({ zPos, bankAngle, phaseOffset, rpm, isFaulty, label, cht }: any) => {
+const VCylinder = React.memo(({ zPos, bankAngle, phaseOffset, rpm, isFaulty, label }: { zPos: number; bankAngle: number; phaseOffset: number; rpm: number; isFaulty: boolean; label: string }) => {
   const pistonRef = useRef<THREE.Group>(null);
   const conRodRef = useRef<THREE.Group>(null);
   const crankPinRef = useRef<THREE.Group>(null);
@@ -296,9 +298,11 @@ const VCylinder = ({ zPos, bankAngle, phaseOffset, rpm, isFaulty, label, cht }: 
   const inPushrodRef = useRef<THREE.Group>(null);
   const exPushrodRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
+  const rpmRef = useRef(rpm);
+  React.useLayoutEffect(() => { rpmRef.current = rpm; }, [rpm]);
 
   useFrame((_, delta) => {
-    const angVel = (rpm / 60) * Math.PI * 2;
+    const angVel = (rpmRef.current / 60) * Math.PI * 2;
     timeRef.current += angVel * delta;
     const theta = timeRef.current + phaseOffset;
 
@@ -388,7 +392,7 @@ const VCylinder = ({ zPos, bankAngle, phaseOffset, rpm, isFaulty, label, cht }: 
       <group rotation={[0, 0, bankAngle]}>
         <mesh position={[2.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[1.0, 1.0, 3.2, 32]} />
-          <meshPhysicalMaterial color="#aaccff" transparent opacity={isFaulty ? 0.35 : 0.15} transmission={0.95} roughness={0.1} />
+          <meshStandardMaterial color={isFaulty ? "#ff6666" : "#aaccff"} transparent opacity={isFaulty ? 0.35 : 0.18} roughness={0.2} metalness={0.1} />
         </mesh>
         <mesh position={[2.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.88, 0.88, 3.1, 32]} />
@@ -493,43 +497,43 @@ const VCylinder = ({ zPos, bankAngle, phaseOffset, rpm, isFaulty, label, cht }: 
 
         {isFaulty && <pointLight position={[4.0, 0, 0]} color={glowColor} intensity={8} distance={6} />}
         
-        <Text position={[5.8, 1.0, 0]} rotation={[0, 0, -bankAngle]} fontSize={0.5} color={isFaulty ? '#ff5555' : '#8888aa'} anchorX="center" anchorY="middle">
-          {label}
-        </Text>
+        <Html position={[5.8, 1.0, 0]} center style={{ color: isFaulty ? "#ff5555" : "#aaa", whiteSpace: "nowrap", pointerEvents: "none" }}>{label}</Html>
       </group>
     </group>
   );
-};
+});
 
 // Main Crankshaft
-const Crankshaft = () => {
+const Crankshaft = React.memo(() => {
   const shaftLength = CYLINDER_SPACING * 3 + 4.0;
   return (
     <group position={[0, 0, 0]}>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.4, 0.4, shaftLength, 32]} />
+        <cylinderGeometry args={[0.4, 0.4, shaftLength, 24]} />
         <meshStandardMaterial color="#777" metalness={0.9} roughness={0.2} />
       </mesh>
       <mesh position={[0, 0, -shaftLength / 2 + 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[2.5, 2.5, 0.6, 64]} />
+        <cylinderGeometry args={[2.5, 2.5, 0.6, 32]} />
         <meshStandardMaterial color="#444" metalness={0.7} roughness={0.4} />
       </mesh>
       <mesh position={[0, 0, -shaftLength / 2 + 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.5, 0.05, 16, 128]} />
+        <torusGeometry args={[2.5, 0.05, 16, 64]} />
         <meshStandardMaterial color="#888" metalness={0.9} />
       </mesh>
     </group>
   );
-};
+});
 
-const TimingSystem = ({ rpm, rightBank, leftBank }: any) => {
+const TimingSystem = React.memo(({ rpm, rightBank, leftBank }: { rpm: number; rightBank: number; leftBank: number }) => {
   const crankGearRef = useRef<THREE.Group>(null);
   const camGearRef = useRef<THREE.Group>(null);
   const camShaftRef = useRef<THREE.Group>(null);
   const accessoryGearRef = useRef<THREE.Group>(null);
+  const rpmRef = useRef(rpm);
+  React.useLayoutEffect(() => { rpmRef.current = rpm; }, [rpm]);
   
   useFrame((_, delta) => {
-    const angVel = (rpm / 60) * Math.PI * 2;
+    const angVel = (rpmRef.current / 60) * Math.PI * 2;
     if (crankGearRef.current) crankGearRef.current.rotation.z += angVel * delta;
     if (camGearRef.current) camGearRef.current.rotation.z -= (angVel / 2) * delta;
     if (camShaftRef.current) camShaftRef.current.rotation.z -= (angVel / 2) * delta;
@@ -552,7 +556,7 @@ const TimingSystem = ({ rpm, rightBank, leftBank }: any) => {
         </group>
         <mesh position={[0.2, 0.6, 0.5]}>
           <boxGeometry args={[5.0, 5.5, 0.8]} />
-          <meshPhysicalMaterial color="#333340" transparent opacity={0.15} transmission={0.95} roughness={0.1} />
+          <meshStandardMaterial color="#333340" transparent opacity={0.25} roughness={0.3} metalness={0.2} />
         </mesh>
         {[[-2.2, 3.2], [2.6, 3.2], [-2.2, -2.0], [2.6, -2.0]].map((p, i) => (
            <mesh key={i} position={[p[0], p[1], 0.9]} rotation={[Math.PI/2, 0, 0]}>
@@ -581,9 +585,9 @@ const TimingSystem = ({ rpm, rightBank, leftBank }: any) => {
       </group>
     </group>
   );
-};
+});
 
-export default function Engine3DView({ currentData, height = '700px' }: { currentData: any; height?: string }) {
+function Engine3DViewComponent({ currentData, height = '700px' }: { currentData: Telemetry | null; height?: string }) {
   const rpm = currentData?.rpm || 0;
   const faultLabel = currentData?.fault_label || 'HEALTHY';
   
@@ -593,14 +597,18 @@ export default function Engine3DView({ currentData, height = '700px' }: { curren
   return (
     <div className="panel" style={{ height, width: '100%', padding: 0, overflow: 'hidden', position: 'relative' }}>
       <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 10, background: 'rgba(0,0,0,0.7)', padding: '0.75rem 1.25rem', borderRadius: '8px', border: '1px solid rgba(100,150,255,0.3)', backdropFilter: 'blur(8px)' }}>
-        <h3 style={{ margin: 0, color: '#6ea8fe', fontSize: '1.1rem', letterSpacing: '0.5px' }}>Aero V-4 OHV Digital Twin</h3>
+        <h3 style={{ margin: 0, color: '#6ea8fe', fontSize: '1.1rem', letterSpacing: '0.5px' }}>Schematic V-4 Engine</h3>
         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#aaa' }}>
           <span style={{ color: '#fff', fontWeight: 'bold' }}>{rpm.toFixed(0)}</span> RPM &nbsp;•&nbsp; 
           <span style={{ color: faultLabel !== 'HEALTHY' ? '#ff5555' : '#44ee44' }}>{faultLabel}</span>
         </p>
       </div>
 
-      <Canvas camera={{ position: [0, 12, 22], fov: 45 }}>
+      <Canvas fallback={<p>3D unavailable. Telemetry remains available below.</p>}
+        camera={{ position: [0, 12, 22], fov: 45 }}
+        dpr={[1, 1.5]}
+        gl={{ powerPreference: 'high-performance', antialias: true, alpha: false, stencil: false }}
+      >
         <color attach="background" args={['#040406']} />
 
         <ambientLight intensity={0.8} />
@@ -635,24 +643,45 @@ export default function Engine3DView({ currentData, height = '700px' }: { curren
           {/* Transparent Upper V-Block Crankcase */}
           <mesh position={[0, 1.5, 0]}>
             <boxGeometry args={[3.2, 4.0, CYLINDER_SPACING * 3 + 1.8]} />
-            <meshPhysicalMaterial color="#333340" transparent opacity={0.15} transmission={0.95} roughness={0.1} />
+            <meshStandardMaterial color="#333340" transparent opacity={0.25} roughness={0.3} metalness={0.2} />
           </mesh>
 
           <Crankshaft />
           <TimingSystem rpm={rpm} rightBank={rightBank} leftBank={leftBank} />
 
           {/* Right Bank */}
-          <VCylinder zPos={CYLINDER_SPACING * 1.5} bankAngle={rightBank} phaseOffset={0} rpm={rpm} isFaulty={faultLabel.includes('CYL1')} label="CYL 1" cht={currentData?.cht_1_c || 150} />
-          <VCylinder zPos={-CYLINDER_SPACING * 0.5} bankAngle={rightBank} phaseOffset={Math.PI} rpm={rpm} isFaulty={faultLabel.includes('CYL3')} label="CYL 3" cht={currentData?.cht_3_c || 150} />
+          <VCylinder zPos={CYLINDER_SPACING * 1.5} bankAngle={rightBank} phaseOffset={0} rpm={rpm} isFaulty={faultLabel.includes('CYL1')} label="CYL 1" />
+          <VCylinder zPos={-CYLINDER_SPACING * 0.5} bankAngle={rightBank} phaseOffset={Math.PI} rpm={rpm} isFaulty={faultLabel.includes('CYL3')} label="CYL 3" />
 
           {/* Left Bank */}
-          <VCylinder zPos={CYLINDER_SPACING * 0.5} bankAngle={leftBank} phaseOffset={Math.PI} rpm={rpm} isFaulty={faultLabel.includes('CYL2')} label="CYL 2" cht={currentData?.cht_2_c || 150} />
-          <VCylinder zPos={-CYLINDER_SPACING * 1.5} bankAngle={leftBank} phaseOffset={0} rpm={rpm} isFaulty={faultLabel.includes('CYL4')} label="CYL 4" cht={currentData?.cht_4_c || 150} />
+          <VCylinder zPos={CYLINDER_SPACING * 0.5} bankAngle={leftBank} phaseOffset={Math.PI} rpm={rpm} isFaulty={faultLabel.includes('CYL2')} label="CYL 2" />
+          <VCylinder zPos={-CYLINDER_SPACING * 1.5} bankAngle={leftBank} phaseOffset={0} rpm={rpm} isFaulty={faultLabel.includes('CYL4')} label="CYL 4" />
         </group>
 
-        <ContactShadows resolution={2048} scale={40} blur={2.0} opacity={0.7} far={20} color="#000" position={[0, -4.0, 0]} />
-        <OrbitControls enablePan enableZoom enableRotate autoRotate autoRotateSpeed={1.8} minDistance={8} maxDistance={40} target={[0, 0, 0]} />
+        <ContactShadows resolution={512} frames={1} scale={40} blur={2.0} opacity={0.7} far={20} color="#000" position={[0, -4.0, 0]} />
+        <OrbitControls enablePan enableZoom enableRotate autoRotate={false} minDistance={8} maxDistance={40} target={[0, 0, 0]} />
       </Canvas>
     </div>
   );
 }
+
+export default React.memo(Engine3DViewComponent, (prev, next) => {
+  return prev.height === next.height &&
+    Math.round(prev.currentData?.rpm || 0) === Math.round(next.currentData?.rpm || 0) &&
+    prev.currentData?.fault_label === next.currentData?.fault_label;
+});
+
+HelixSpring.displayName = "HelixSpring";
+Gear.displayName = "Gear";
+CamLobe.displayName = "CamLobe";
+DetailedSparkPlug.displayName = "DetailedSparkPlug";
+DetailedRockerArm.displayName = "DetailedRockerArm";
+Turbocharger.displayName = "Turbocharger";
+StarterMotor.displayName = "StarterMotor";
+Alternator.displayName = "Alternator";
+IntakeManifold.displayName = "IntakeManifold";
+IgnitionSystem.displayName = "IgnitionSystem";
+ECU.displayName = "ECU";
+VCylinder.displayName = "VCylinder";
+Crankshaft.displayName = "Crankshaft";
+TimingSystem.displayName = "TimingSystem";

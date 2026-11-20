@@ -1,17 +1,17 @@
 'use client';
+import { download, telemetryCsv, isHealthy, type Telemetry } from '@/lib/telemetry';
 import React from 'react';
 import { Download } from 'lucide-react';
 
-export default function TrendLogs({ dataHistory }: { dataHistory: any[] }) {
-  
+function TrendLogsComponent({ dataHistory }: { dataHistory: Telemetry[] }) {
   // Create a reversed copy for the table so newest is on top
-  const tableData = [...dataHistory].reverse();
+  const tableData = React.useMemo(() => [...dataHistory].reverse(), [dataHistory]);
 
   return (
     <div className="panel">
       <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="panel-title">Raw Telemetry Trend Logs</div>
-        <button className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button disabled={!dataHistory.length} onClick={() => download(telemetryCsv(dataHistory), 'simulated-telemetry.csv', 'text/csv')} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Download size={14} /> Export CSV
         </button>
       </div>
@@ -43,7 +43,7 @@ export default function TrendLogs({ dataHistory }: { dataHistory: any[] }) {
                   <td style={{ padding: '0.75rem' }}>{row.rpm?.toFixed(0)}</td>
                   <td style={{ padding: '0.75rem' }}>{row.fuel_flow_lph?.toFixed(1)} L/h</td>
                   <td style={{ padding: '0.75rem' }}>{avgCht.toFixed(1)} °C</td>
-                  <td style={{ padding: '0.75rem', color: row.fault_severity > 0.5 ? 'var(--accent-red)' : 'var(--accent-green)' }}>{row.fault_label}</td>
+                  <td style={{ padding: '0.75rem', color: isHealthy(row) ? 'var(--accent-green)' : 'var(--accent-red)' }}>{row.fault_label}</td>
                   <td style={{ padding: '0.75rem' }}>{row.rul_hours?.toFixed(1)}</td>
                 </tr>
               );
@@ -54,3 +54,5 @@ export default function TrendLogs({ dataHistory }: { dataHistory: any[] }) {
     </div>
   );
 }
+
+export default React.memo(TrendLogsComponent);
