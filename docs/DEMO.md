@@ -15,12 +15,8 @@ For a quick labelled fault demonstration without waiting through healthy rows, s
 
 Capture at 1280×720 or larger and keep the simulation notice visible. Use an actual screen recording with captions; avoid claims about accuracy, FPS, latency or real flight performance without measured evidence. Screenshots can be regenerated with `npm run test:e2e` after a production build.
 
-Suggested repository description: “Local simulated UAV engine dashboard with deterministic telemetry, CSV replay, schematic 3D visualization, validated controls and automated tests.”
-
-Suggested topics (owner can apply): `digital-twin`, `simulation`, `nextjs`, `typescript`, `python`, `websocket`, `threejs`, `telemetry`.
-
-No hosted demo is deployed. Publication, repository settings and any video upload require owner approval.
+No hosted demo is deployed.
 
 ## Captured walkthrough
 
-[Watch the automated local-simulator walkthrough](assets/walkthrough.webm). This short, unedited browser-test recording covers controls, mode selection, exports, navigation, mobile settings and the optional 3D view. It has no narration and is software demonstration evidence, not an aircraft test.
+[Watch the automated local-simulator walkthrough](assets/walkthrough.webm). This short, unedited browser-test recording covers controls, mode selection, exports, navigation, mobile settings and the Dashboard's 3D engine view. It has no narration and is software demonstration evidence, not an aircraft test.

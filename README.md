@@ -37,7 +37,7 @@ Terminal two:
 npm run dev
 ```
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Wait for **Connected**, then adjust throttle. Select **Show 3D Engine** to load the optional visualization. The server filename is retained for compatibility; it speaks JSON WebSocket, not MAVLink.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Wait for **Connected**, then adjust throttle. The schematic 3D engine appears directly on the Dashboard in a WebGL-capable browser. The server filename is retained for compatibility; it speaks JSON WebSocket, not MAVLink.
 
 ## What to explore
 
