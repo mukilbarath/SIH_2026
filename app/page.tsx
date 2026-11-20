@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Settings, Cpu, Gauge, Activity, AlertCircle, BarChart3, Database } from 'lucide-react';
 import styles from './page.module.css';
 
@@ -21,11 +21,6 @@ import SystemConfigView from '@/components/SystemConfigView';
 export default function Home() {
   const { currentData, dataHistory, status: connectionStatus, error, send, connected } = useTelemetry();
   const [activeTab, setActiveTab] = useState('Dashboard');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   const currentThrottle = currentData?.throttle_pct ?? 0;
   const handleThrottleChange = useCallback((value: number) => send({ type: 'set_throttle', value }), [send]);
   const handleModeChange = useCallback((value: Mode) => send({ type: 'set_mode', value }), [send]);
@@ -43,29 +38,6 @@ export default function Home() {
     { id: 'Datasets', icon: <Database size={20} /> },
     { id: 'System Config', icon: <Settings size={20} />, bottom: true }
   ];
-
-  if (!mounted) {
-    return (
-      <div className={styles.layout}>
-        <aside className={styles.sidebar}>
-          <div className={styles.logo}>
-            <Cpu className="status-healthy" />
-            <span>Digital Twin Core</span>
-          </div>
-        </aside>
-        <main className={styles.mainContent}>
-          <header className={styles.header}>
-            <div>
-              <h1 className={styles.headerTitle}>MALE UAV Aero Piston Engine</h1>
-            </div>
-          </header>
-          <div className="panel" style={{ margin: '2rem 0', textAlign: 'center' }}>
-            Loading dashboard…
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.layout}>
